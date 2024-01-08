@@ -1,8 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pokedex/data/pokemon.dart';
+import 'package:pokedex/screens/pokemon_filter.dart';
 import 'package:pokedex/widgets/pokemon_card.dart';
 
 class PokemonListScreen extends StatefulWidget {
@@ -39,7 +39,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     // Pokemon list from json converted to list
     List<Pokemon> pokemonList =
         jsonList.map((json) => Pokemon.fromJson(json)).toList();
-    // Sorting the pokemon list 
+    // Sorting the pokemon list
     pokemonList.sort((a, b) => a.index.compareTo(b.index));
 
     return pokemonList;
@@ -55,6 +55,14 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     });
   }
 
+  // Navigate to filter screen
+  void _filterScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PokemonFilterScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,11 +73,21 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
           children: [
             AppBar(
               title: const Text(
-                'Pokèdex',
+                'Pokédex',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               centerTitle: true,
               backgroundColor: const Color.fromARGB(255, 228, 227, 227),
+              actions: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.tune,
+                    size: 24.0,
+                    color: Color.fromARGB(255, 53, 123, 242),
+                  ),
+                  onPressed: _filterScreen,
+                ),
+              ],
             ),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -80,7 +98,8 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
               child: Row(
                 children: [
                   const Padding(
-                    padding: EdgeInsets.all(7),
+                    padding:
+                        EdgeInsets.only(top: 8, left: 8, bottom: 8, right: 20),
                     child: Icon(
                       Icons.search,
                       size: 24.0,
