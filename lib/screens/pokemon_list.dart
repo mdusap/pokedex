@@ -16,12 +16,12 @@ class PokemonListScreen extends StatefulWidget {
 
 class _PokemonListScreenState extends State<PokemonListScreen> {
   late List<Pokemon> pokemons;
-  late List<Pokemon> displayedPokemons;
+  late List<Pokemon> displayedPokemons = [];
 
   @override
   void initState() {
     super.initState();
-    loadPokemonData().then((pokemonList) {
+    _loadPokemonData().then((pokemonList) {
       setState(() {
         pokemons = pokemonList;
         displayedPokemons = pokemons;
@@ -30,23 +30,22 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   }
 
   // Retrieving pokemon data from json to display it
-  Future<List<Pokemon>> loadPokemonData() async {
+  Future<List<Pokemon>> _loadPokemonData() async {
     // Decoding pokemon list
     final String jsonString =
         await rootBundle.loadString('lib/data/pokemon.json');
     final List<dynamic> jsonList = json.decode(jsonString);
-
     // Pokemon list from json converted to list
     List<Pokemon> pokemonList =
         jsonList.map((json) => Pokemon.fromJson(json)).toList();
     // Sorting the pokemon list
     pokemonList.sort((a, b) => a.index.compareTo(b.index));
-
     return pokemonList;
   }
 
   // Search pokemon method
   void _search(String query) {
+    query = query.replaceAll(' ', '');
     setState(() {
       displayedPokemons = pokemons
           .where((pokemon) =>
@@ -56,11 +55,29 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   }
 
   // Navigate to filter screen
-  void _filterScreen() {
-    Navigator.push(
+  void _filterScreen() async {
+    final Set<String>? selectedTypes = await Navigator.push<Set<String>?>(
       context,
       MaterialPageRoute(builder: (context) => const PokemonFilterScreen()),
     );
+    if (selectedTypes != null) {
+      _applyTypeFilter(selectedTypes);
+    }
+  }
+
+  // Apply type filter to displayedPokemons
+  void _applyTypeFilter(Set<String> selectedTypes) {
+    setState(() {
+      if (selectedTypes.isNotEmpty) {
+        displayedPokemons = pokemons
+            .where((pokemon) =>
+                pokemon.type.isNotEmpty &&
+                selectedTypes.contains(pokemon.type.toLowerCase()))
+            .toList();
+      } else {
+        displayedPokemons = pokemons;
+      }
+    });
   }
 
   @override
