@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pokedex/data/pokemon.dart';
+import 'package:pokedex/helpers/helpers.dart';
 
 class PokemonCard extends StatelessWidget {
   const PokemonCard({super.key, required this.pokemon});
@@ -9,12 +10,7 @@ class PokemonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    String capitalize(String s) {
-      if (s.isEmpty) {
-        return '';
-      }
-      return s[0].toUpperCase() + s.substring(1);
-    }
+    Helper helper = Helper.instance;
 
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -34,7 +30,7 @@ class PokemonCard extends StatelessWidget {
                 children: [
                   Image.network(pokemon.image, height: 80.0),
                   Text(
-                   capitalize(pokemon.name),
+                   helper.capitalize(pokemon.name),
                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],

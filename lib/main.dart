@@ -1,10 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:pokedex/helpers/shared_preferences_manager.dart';
 import 'package:pokedex/screens/pokemon_list.dart';
 
-void main() {
+void main() async {
   HttpOverrides.global = MyHttpOverrides();
+  WidgetsFlutterBinding.ensureInitialized();
+  await SharedPreferencesManager().init();
   runApp(const MyApp());
 }
 

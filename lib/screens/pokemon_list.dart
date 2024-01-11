@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pokedex/data/pokemon.dart';
+import 'package:pokedex/screens/pokemon_detail.dart';
 import 'package:pokedex/screens/pokemon_filter.dart';
 import 'package:pokedex/widgets/pokemon_card.dart';
 
@@ -44,7 +45,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   }
 
   // Search pokemon method
-  void _search(String query) {
+  void _searchPokemons(String query) {
     query = query.replaceAll(' ', '');
     setState(() {
       displayedPokemons = pokemons
@@ -54,19 +55,29 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     });
   }
 
+  // Navigate to detail pokemon screen
+  void _navigateToDetailScreen(Pokemon pokemon) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PokemonDetailScreen(pokemon: pokemon),
+      ),
+    );
+  }
+
   // Navigate to filter screen
-  void _filterScreen() async {
+  void _navigateToFilterScreen() async {
     final Set<String>? selectedTypes = await Navigator.push<Set<String>?>(
       context,
       MaterialPageRoute(builder: (context) => const PokemonFilterScreen()),
     );
     if (selectedTypes != null) {
-      _applyTypeFilter(selectedTypes);
+      _applyFilters(selectedTypes);
     }
   }
 
   // Apply type filter to displayedPokemons
-  void _applyTypeFilter(Set<String> selectedTypes) {
+  void _applyFilters(Set<String> selectedTypes) {
     setState(() {
       if (selectedTypes.isNotEmpty) {
         displayedPokemons = pokemons
@@ -102,7 +113,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                     size: 24.0,
                     color: Color.fromARGB(255, 53, 123, 242),
                   ),
-                  onPressed: _filterScreen,
+                  onPressed: _navigateToFilterScreen,
                 ),
               ],
             ),
@@ -125,7 +136,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                   ),
                   Expanded(
                     child: TextField(
-                      onChanged: _search,
+                      onChanged: _searchPokemons,
                       decoration: const InputDecoration(
                         hintText: 'Buscar por nombre',
                         hintStyle: TextStyle(fontWeight: FontWeight.w300),
@@ -148,7 +159,12 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
               itemCount: displayedPokemons.length,
               itemBuilder: (context, index) {
                 Pokemon pokemon = displayedPokemons[index];
-                return PokemonCard(pokemon: pokemon);
+                return GestureDetector(
+                  onTap: () {
+                    _navigateToDetailScreen(pokemon);
+                  },
+                  child: PokemonCard(pokemon: pokemon),
+                );
               },
             ),
     );
