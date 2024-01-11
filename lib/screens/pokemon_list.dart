@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pokedex/data/pokemon.dart';
+import 'package:pokedex/helpers/shared_preferences_manager.dart';
 import 'package:pokedex/screens/pokemon_detail.dart';
 import 'package:pokedex/screens/pokemon_filter.dart';
 import 'package:pokedex/widgets/pokemon_card.dart';
@@ -19,6 +20,8 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   late List<Pokemon> pokemons;
   late List<Pokemon> displayedPokemons = [];
 
+  SharedPreferencesManager prefsManager = SharedPreferencesManager();
+
   @override
   void initState() {
     super.initState();
@@ -30,15 +33,19 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     });
   }
 
-  // Retrieving pokemon data from json to display it
   Future<List<Pokemon>> _loadPokemonData() async {
     // Decoding pokemon list
     final String jsonString =
         await rootBundle.loadString('lib/data/pokemon.json');
     final List<dynamic> jsonList = json.decode(jsonString);
     // Pokemon list from json converted to list
-    List<Pokemon> pokemonList =
-        jsonList.map((json) => Pokemon.fromJson(json)).toList();
+    List<Pokemon> pokemonList = jsonList.map((json) {
+      Pokemon pokemon = Pokemon.fromJson(json);
+      // Retrieve isFavorite status from SharedPreferences
+      final key = 'favorite_${pokemon.index}';
+      pokemon.isFavorite = prefsManager.getBool(key);
+      return pokemon;
+    }).toList();
     // Sorting the pokemon list
     pokemonList.sort((a, b) => a.index.compareTo(b.index));
     return pokemonList;
@@ -56,8 +63,8 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   }
 
   // Navigate to detail pokemon screen
-  void _navigateToDetailScreen(Pokemon pokemon) {
-    Navigator.push(
+  void _navigateToDetailScreen(Pokemon pokemon) async {
+    await Navigator.push<bool?>(
       context,
       MaterialPageRoute(
         builder: (context) => PokemonDetailScreen(pokemon: pokemon),

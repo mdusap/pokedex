@@ -29,12 +29,12 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
     isFavorite = prefsManager.getBool(key);
   }
 
-  Future<void> _toggleFavoriteStatus() async {
+  void _toggleFavoriteStatus() {
     final key = 'favorite_${widget.pokemon.index}';
     setState(() {
       isFavorite = !isFavorite;
     });
-    await prefsManager.setBool(key, isFavorite);
+    prefsManager.setBool(key, isFavorite);
   }
 
   @override

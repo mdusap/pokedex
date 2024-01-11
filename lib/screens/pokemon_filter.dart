@@ -16,6 +16,8 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
 
   SharedPreferencesManager prefsManager = SharedPreferencesManager();
 
+  late String selectedFavoritesOption = 'Select Favorites';
+
   List<String> pokemonTypes = [
     'Fire',
     'Water',
@@ -33,7 +35,7 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
     '100 o superior',
   ];
 
-  List<String> favoritePokemons = [
+  List<String> favoritesPokemon = [
     'Select Favorites',
     'Select All',
   ];
@@ -41,6 +43,7 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
   // Using set instead of list to not allow duplicated (When user presses the same item multiple times it gets the same value multiple times and that was an error)
   Set<String> selectedTypes = {};
   Set<String> selectedWeights = {};
+  Set<String> selectedFavoritesPokemon = {};
 
   @override
   void initState() {
@@ -60,6 +63,7 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
     } else {
       prefsManager.setStringList('selectedTypes', selectedTypes.toList());
     }
+    prefsManager.setString('selectedFavoritesOption', selectedFavoritesOption);
   }
 
   @override
@@ -71,7 +75,6 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
           TextButton(
             onPressed: () {
               _saveFilters();
-              //final data = {"types":selectedTypes.toSet(), "weights":selectedWeights.toSet()};
               Navigator.of(context).pop(selectedTypes.toSet());
             },
             child: const Text(
@@ -119,22 +122,18 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
               Card(
                 elevation: 3,
                 child: SizedBox(
-                  height: 60.0,
+                  height: 110,
                   child: ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: favoritePokemons.length,
+                    itemCount: favoritesPokemon.length,
                     itemBuilder: (BuildContext context, int index) {
-                      String favorites = favoritePokemons[index];
-                      bool isSelected = favoritePokemons.contains(favorites);
+                      String favorites = favoritesPokemon[index];
+                      bool isSelected = selectedFavoritesOption == favorites;
                       return ListTile(
                         title: Text(favorites),
                         onTap: () {
                           setState(() {
-                            if (isSelected) {
-                              selectedTypes.remove(favorites);
-                            } else {
-                              selectedTypes.add(favorites);
-                            }
+                            selectedFavoritesOption == favorites;
                           });
                         },
                         trailing: isSelected
