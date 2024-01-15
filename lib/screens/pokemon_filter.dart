@@ -22,29 +22,63 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
     'Grass',
     'Poison',
     'Bug',
-    'Dragon'
+    'Dragon',
+    'Ghost'
+  ];
+
+  List<String> weightRanges = [
+    '0-10 kg',
+    '10-35 kg',
+    '35-75 kg',
+    '75-100 kg',
+    '100 o superior'
   ];
 
   // Using set instead of list to not allow duplicated (When user presses the same item multiple times it gets the same value multiple times and that was an error)
   Set<String> selectedTypes = {};
+  Set<String> selectedFavorites = {};
+  Set<String> selectedWeights = {};
 
   @override
   void initState() {
     super.initState();
-    if (selectedTypes.isNotEmpty) {
-      selectedTypes = (prefsManager.getStringList('selectedTypes')).toSet();
-    } else {
-      selectedTypes = (prefsManager.getEmptyStringList('selectedTypes')).toSet();
-    }
+    _getFilters();
+  }
+
+  void _getFilters() {
+     selectedTypes = prefsManager.getStringList('selectedTypes')?.toSet() ?? {};
+    selectedFavorites = prefsManager.getStringList('selectedFavorites')?.toSet() ?? {};
+    selectedWeights = prefsManager.getStringList('selectedWeights')?.toSet() ?? {};
   }
 
   // Using shared_preferences to save the selected item so when we go back to the filter screen mantain the selected item/s
-  Future<void> _saveFilters() async {
+  Future<Map<String, List<String>>> _saveFilters() async {
+    final filters = {
+      'selectedTypes': selectedTypes.toList(),
+      'selectedFavorites': selectedFavorites.toList(),
+      'selectedWeights': selectedWeights.toList(),
+    };
+
     if (selectedTypes.isEmpty) {
       prefsManager.setEmptyStringList('selectedTypes');
     } else {
       prefsManager.setStringList('selectedTypes', selectedTypes.toList());
     }
+
+    if (selectedFavorites.isEmpty) {
+      prefsManager.setEmptyStringList('selectedFavorites');
+    } else {
+      prefsManager.setStringList('selectedFavorites', selectedFavorites.toList());
+    }
+
+    if (selectedWeights.isEmpty) {
+      prefsManager.setEmptyStringList('selectedWeights');
+    } else {
+      prefsManager.setStringList('selectedWeights', selectedWeights.toList());
+    }
+
+    // Map filters
+    return filters;
   }
 
   @override
@@ -54,9 +88,10 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
       appBar: AppBar(
         actions: [
           TextButton(
-            onPressed: () {
-              _saveFilters();
-              Navigator.of(context).pop(selectedTypes.toSet());
+            onPressed: () async {
+              // To send all filters to list screen
+              Map<String, List<String>> filters = await _saveFilters();
+              Navigator.of(context).pop(filters);
             },
             child: const Text(
               'OK',
@@ -95,6 +130,28 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.only(left: 15),
+                // Favorite pokemons part 
+                child: Text(
+                  'FAVORITE POKEMONS',
+                  style: TextStyle(color: Color.fromARGB(255, 160, 160, 160)),
+                ),
+              ),
+              Card(
+                elevation: 3,
+                child: Column(
+                  children: [
+                    _buildNotPredefinedOption('Select Favorites', 'favorites'),
+                    _buildNotPredefinedOption('Select All', 'all'),
+                  ],
+                ),
+              ),
+              // End favorite pokemons part 
+              const SizedBox(
+                height: 15,
+              ),
+              // Select type part 
+              const Padding(
+                padding: EdgeInsets.only(left: 15),
                 child: Text(
                   'SELECT TYPE',
                   style: TextStyle(color: Color.fromARGB(255, 160, 160, 160)),
@@ -115,11 +172,9 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
                         title: Text(type),
                         onTap: () {
                           setState(() {
-                            if (isSelected) {
-                              selectedTypes.remove(type.toLowerCase());
-                            } else {
-                              selectedTypes.add(type.toLowerCase());
-                            }
+                            isSelected
+                                ? selectedTypes.remove(type.toLowerCase())
+                                : selectedTypes.add(type.toLowerCase());
                           });
                         },
                         trailing: isSelected
@@ -133,10 +188,71 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
                   ),
                 ),
               ),
+              // End select type part
+              const SizedBox(
+                height: 15,
+              ),
+              // Select weight part 
+              const Padding(
+                padding: EdgeInsets.only(left: 15),
+                child: Text(
+                  'SELECT WEIGHT',
+                  style: TextStyle(color: Color.fromARGB(255, 160, 160, 160)),
+                ),
+              ),
+              Card(
+                elevation: 3,
+                child: SizedBox(
+                  height: weightRanges.length * 60.0,
+                  child: ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: weightRanges.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      String weightRange = weightRanges[index];
+                      bool isSelected =
+                          selectedWeights.contains(weightRange.toLowerCase());
+                      return ListTile(
+                        title: Text(weightRange),
+                        onTap: () {
+                          setState(() {
+                            isSelected
+                                ? selectedWeights
+                                    .remove(weightRange.toLowerCase())
+                                : selectedWeights
+                                    .add(weightRange.toLowerCase());
+                          });
+                        },
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.blue,
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // End select weight part
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // Widget for favorite pokemon
+  Widget _buildNotPredefinedOption(String title, String value) {
+    bool isSelected = selectedFavorites.contains(value);
+
+    return ListTile(
+      title: Text(title),
+      onTap: () {
+        setState(() {
+          isSelected ? selectedFavorites.remove(value) : selectedFavorites.add(value);
+        });
+      },
+      trailing: isSelected ? const Icon( Icons.check, color: Colors.blue,) : null,
     );
   }
 }

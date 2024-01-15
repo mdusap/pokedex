@@ -1,11 +1,13 @@
-// pokemon_detail_screen.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:pokedex/data/pokemon.dart';
 import 'package:pokedex/helpers/helpers.dart';
 import 'package:pokedex/helpers/shared_preferences_manager.dart';
 
 class PokemonDetailScreen extends StatefulWidget {
-  const PokemonDetailScreen({Key? key, required this.pokemon}): super(key: key);
+  const PokemonDetailScreen({Key? key, required this.pokemon}) : super(key: key);
 
   final Pokemon pokemon;
 
@@ -17,13 +19,47 @@ class PokemonDetailScreen extends StatefulWidget {
 
 class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
   late bool isFavorite;
+  late String description = "";
+  late bool isLoading = true;
 
   Helper helper = Helper.instance;
+
   SharedPreferencesManager prefsManager = SharedPreferencesManager();
 
   @override
   void initState() {
     super.initState();
+    _getFavorites();
+    _fetchPokemonDescription();
+  }
+
+  Future<void> _fetchPokemonDescription() async {
+    final url =
+        'https://pokeapi.co/api/v2/pokemon-species/${widget.pokemon.index}';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final decodedData = json.decode(response.body);
+      final flavorTextEntries = decodedData['flavor_text_entries'];
+
+      for (var entry in flavorTextEntries) {
+        if (entry['language']['name'] == 'es') {
+          setState(() {
+            description = entry['flavor_text'];
+            isLoading = false;
+          });
+          break;
+        }
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      print('Failed to load Pokemon description');
+    }
+  }
+
+  void _getFavorites() {
     final key = 'favorite_${widget.pokemon.index}';
     isFavorite = prefsManager.getBool(key);
   }
@@ -203,6 +239,36 @@ class _PokemonDetailScreenState extends State<PokemonDetailScreen> {
                   ),
                 ),
                 // end type and weight info
+                const SizedBox(
+                  height: 20,
+                ),
+                // Pokemon description
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 12, top: 30),
+                      child: Text(
+                        'Descripción',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 145, 144, 144),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: isLoading
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              description,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ],
+                ),
+                // End pokemon description
               ],
             ),
           ],

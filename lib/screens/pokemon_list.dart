@@ -25,7 +25,21 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPokemonData().then((pokemonList) {
+    _loadPokemonData();
+  }
+
+  // Get the pokemon data from the json and isFavorite
+  void _loadPokemonData() {
+    rootBundle.loadString('lib/data/pokemon.json').then((jsonString) {
+      final List<dynamic> jsonList = json.decode(jsonString);
+      List<Pokemon> pokemonList = jsonList.map((json) {
+        Pokemon pokemon = Pokemon.fromJson(json);
+        final key = 'favorite_${pokemon.index}';
+        pokemon.isFavorite = prefsManager.getBool(key);
+        return pokemon;
+      }).toList();
+      pokemonList.sort((a, b) => a.index.compareTo(b.index));
+
       setState(() {
         pokemons = pokemonList;
         displayedPokemons = pokemons;
@@ -33,26 +47,8 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     });
   }
 
-  Future<List<Pokemon>> _loadPokemonData() async {
-    // Decoding pokemon list
-    final String jsonString =
-        await rootBundle.loadString('lib/data/pokemon.json');
-    final List<dynamic> jsonList = json.decode(jsonString);
-    // Pokemon list from json converted to list
-    List<Pokemon> pokemonList = jsonList.map((json) {
-      Pokemon pokemon = Pokemon.fromJson(json);
-      // Retrieve isFavorite status from SharedPreferences
-      final key = 'favorite_${pokemon.index}';
-      pokemon.isFavorite = prefsManager.getBool(key);
-      return pokemon;
-    }).toList();
-    // Sorting the pokemon list
-    pokemonList.sort((a, b) => a.index.compareTo(b.index));
-    return pokemonList;
-  }
-
   // Search pokemon method
-  void _searchPokemons(String query) {
+  void _filterPokemons(String query) {
     query = query.replaceAll(' ', '');
     setState(() {
       displayedPokemons = pokemons
@@ -74,28 +70,85 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
 
   // Navigate to filter screen
   void _navigateToFilterScreen() async {
-    final Set<String>? selectedTypes = await Navigator.push<Set<String>?>(
+    final Map<String, List<String>>? filters =
+        await Navigator.push<Map<String, List<String>>?>(
       context,
       MaterialPageRoute(builder: (context) => const PokemonFilterScreen()),
     );
-    if (selectedTypes != null) {
-      _applyFilters(selectedTypes);
+    if (filters != null) {
+      _applyFilters(filters);
     }
   }
 
-  // Apply type filter to displayedPokemons
-  void _applyFilters(Set<String> selectedTypes) {
+  // Apply filters 
+  void _applyFilters(Map<String, List<String>> filters) {
     setState(() {
-      if (selectedTypes.isNotEmpty) {
-        displayedPokemons = pokemons
-            .where((pokemon) =>
-                pokemon.type.isNotEmpty &&
-                selectedTypes.contains(pokemon.type.toLowerCase()))
-            .toList();
+      final List<String> selectedTypes = filters['selectedTypes'] ?? [];
+      final List<String> selectedFavorites = filters['selectedFavorites'] ?? [];
+      final List<String> selectedWeights = filters['selectedWeights'] ?? [];
+
+      if (selectedTypes.isNotEmpty ||
+          selectedFavorites.isNotEmpty ||
+          selectedWeights.isNotEmpty) {
+        displayedPokemons = pokemons.where((pokemon) {
+          final condition = selectedTypes.isEmpty ||
+              (pokemon.type.isNotEmpty &&
+                  selectedTypes.contains(pokemon.type.toLowerCase()));
+
+          final favoritesCondition = selectedFavorites.isEmpty ||
+              (selectedFavorites.contains('favorites') && pokemon.isFavorite) ||
+              (selectedFavorites.contains('all'));
+
+          final weightCondition = _checkWeightRange(
+            pokemon.weight,
+            selectedWeights,
+          );
+
+          return condition && favoritesCondition && weightCondition;
+        }).toList();
       } else {
         displayedPokemons = pokemons;
       }
     });
+  }
+
+  // Check weight method
+  bool _checkWeightRange(double weight, List<String> selectedWeights) {
+    if (selectedWeights.isEmpty) {
+      return true;
+    }
+
+    for (String range in selectedWeights) {
+      switch (range.toLowerCase()) {
+        case '100 o superior':
+          if (weight >= 100.0) {
+            return true;
+          }
+          break;
+        case '75-100 kg':
+          if (weight >= 75.0 && weight < 100.0) {
+            return true;
+          }
+          break;
+        case '35-75 kg':
+          if (weight >= 35.0 && weight < 75.0) {
+            return true;
+          }
+          break;
+        case '10-35 kg':
+          if (weight >= 10.0 && weight < 35.0) {
+            return true;
+          }
+          break;
+        case '0-10 kg':
+          if (weight >= 0.0 && weight < 10.0) {
+            return true;
+          }
+          break;
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -143,7 +196,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                   ),
                   Expanded(
                     child: TextField(
-                      onChanged: _searchPokemons,
+                      onChanged: _filterPokemons,
                       decoration: const InputDecoration(
                         hintText: 'Buscar por nombre',
                         hintStyle: TextStyle(fontWeight: FontWeight.w300),

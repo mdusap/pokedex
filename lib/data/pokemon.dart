@@ -21,7 +21,7 @@ class Pokemon {
       image: json['image'],
       name: json['name'],
       type: json['type'],
-      weight: json['weight'].toDouble(),
+      weight: json['weight'] != null ? json['weight'].toDouble() : 0.0,
       isFavorite: false,
     );
   }
