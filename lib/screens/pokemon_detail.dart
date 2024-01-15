@@ -5,8 +5,7 @@ import 'package:pokedex/helpers/helpers.dart';
 import 'package:pokedex/helpers/shared_preferences_manager.dart';
 
 class PokemonDetailScreen extends StatefulWidget {
-  const PokemonDetailScreen({Key? key, required this.pokemon})
-      : super(key: key);
+  const PokemonDetailScreen({Key? key, required this.pokemon}): super(key: key);
 
   final Pokemon pokemon;
 

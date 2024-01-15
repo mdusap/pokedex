@@ -16,8 +16,6 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
 
   SharedPreferencesManager prefsManager = SharedPreferencesManager();
 
-  late String selectedFavoritesOption = 'Select Favorites';
-
   List<String> pokemonTypes = [
     'Fire',
     'Water',
@@ -27,23 +25,8 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
     'Dragon'
   ];
 
-  List<String> pokemonWeights = [
-    '0 to 10 kg',
-    '10 to 35 kg',
-    '35 to 75 kg',
-    '75 to 100 kg',
-    '100 o superior',
-  ];
-
-  List<String> favoritesPokemon = [
-    'Select Favorites',
-    'Select All',
-  ];
-
   // Using set instead of list to not allow duplicated (When user presses the same item multiple times it gets the same value multiple times and that was an error)
   Set<String> selectedTypes = {};
-  Set<String> selectedWeights = {};
-  Set<String> selectedFavoritesPokemon = {};
 
   @override
   void initState() {
@@ -51,8 +34,7 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
     if (selectedTypes.isNotEmpty) {
       selectedTypes = (prefsManager.getStringList('selectedTypes')).toSet();
     } else {
-      selectedTypes =
-          (prefsManager.getEmptyStringList('selectedTypes')).toSet();
+      selectedTypes = (prefsManager.getEmptyStringList('selectedTypes')).toSet();
     }
   }
 
@@ -63,7 +45,6 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
     } else {
       prefsManager.setStringList('selectedTypes', selectedTypes.toList());
     }
-    prefsManager.setString('selectedFavoritesOption', selectedFavoritesOption);
   }
 
   @override
@@ -115,44 +96,6 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
               const Padding(
                 padding: EdgeInsets.only(left: 15),
                 child: Text(
-                  'FAVORITE POKEMONS',
-                  style: TextStyle(color: Color.fromARGB(255, 160, 160, 160)),
-                ),
-              ),
-              Card(
-                elevation: 3,
-                child: SizedBox(
-                  height: 110,
-                  child: ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: favoritesPokemon.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      String favorites = favoritesPokemon[index];
-                      bool isSelected = selectedFavoritesOption == favorites;
-                      return ListTile(
-                        title: Text(favorites),
-                        onTap: () {
-                          setState(() {
-                            selectedFavoritesOption == favorites;
-                          });
-                        },
-                        trailing: isSelected
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.blue,
-                              )
-                            : null,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text(
                   'SELECT TYPE',
                   style: TextStyle(color: Color.fromARGB(255, 160, 160, 160)),
                 ),
@@ -176,48 +119,6 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
                               selectedTypes.remove(type.toLowerCase());
                             } else {
                               selectedTypes.add(type.toLowerCase());
-                            }
-                          });
-                        },
-                        trailing: isSelected
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.blue,
-                              )
-                            : null,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text(
-                  'SELECT WEIGHT',
-                  style: TextStyle(color: Color.fromARGB(255, 160, 160, 160)),
-                ),
-              ),
-              Card(
-                elevation: 3,
-                child: SizedBox(
-                  height: pokemonWeights.length * 60.0,
-                  child: ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: pokemonWeights.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      String weight = pokemonWeights[index];
-                      bool isSelected = selectedWeights.contains(weight);
-                      return ListTile(
-                        title: Text(weight),
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              selectedWeights.remove(weight);
-                            } else {
-                              selectedWeights.add(weight);
                             }
                           });
                         },
