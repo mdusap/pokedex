@@ -46,9 +46,9 @@ class _PokemonFilterScreenState extends State<PokemonFilterScreen> {
   }
 
   void _getFilters() {
-     selectedTypes = prefsManager.getStringList('selectedTypes')?.toSet() ?? {};
-    selectedFavorites = prefsManager.getStringList('selectedFavorites')?.toSet() ?? {};
-    selectedWeights = prefsManager.getStringList('selectedWeights')?.toSet() ?? {};
+    selectedTypes = prefsManager.getStringList('selectedTypes').toSet();
+    selectedFavorites = prefsManager.getStringList('selectedFavorites').toSet();
+    selectedWeights = prefsManager.getStringList('selectedWeights').toSet();
   }
 
   // Using shared_preferences to save the selected item so when we go back to the filter screen mantain the selected item/s
